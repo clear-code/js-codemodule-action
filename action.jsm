@@ -1,7 +1,7 @@
 /**
  * @fileOverview User Action Emulator for Firefox 3.5 or later 
  * @author       ClearCode Inc.
- * @version      3
+ * @version      4
  *
  * @example
  *   Components.utils.import('resource://my-modules/action.jsm');
@@ -10,7 +10,7 @@
  *   // (ja: http://www.clear-code.com/software/uxu/helpers.html#actions )
  *
  * @license
- *   The MIT License, Copyright (c) 2010-2011 ClearCode Inc.
+ *   The MIT License, Copyright (c) 2010-2014 ClearCode Inc.
  *   https://github.com/clear-code/js-codemodules/blob/master/license.txt
  * @url https://github.com/clear-code/js-codemodules/blob/master/action.jsm
  * @url https://github.com/clear-code/js-codemodules/blob/master/action_tests/
@@ -1376,7 +1376,7 @@ var action;
 					let x = args.startX + (deltaX * progress);
 					let y = args.startY + (deltaY * progress);
 					this.mouseMoveAt(x, y, args.modifiers);
-					yield;
+					yield undefined;
 					if (progress == 1) break;
 				}
 			}
@@ -1523,7 +1523,7 @@ var action;
 					aOptions.screenX = x;
 					aOptions.screenY = y;
 					_this.fireMouseEvent(aFrame, aOptions);
-					yield;
+					yield undefined;
 					if (x == aToX && y == aToY) break;
 				}
 			}
