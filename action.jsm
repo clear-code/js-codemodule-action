@@ -1,7 +1,7 @@
 /**
- * @fileOverview User Action Emulator for Firefox 3.5 or later 
+ * @fileOverview User Action Emulator for Firefox 4 or later 
  * @author       ClearCode Inc.
- * @version      4
+ * @version      5
  *
  * @example
  *   Components.utils.import('resource://my-modules/action.jsm');
@@ -1014,6 +1014,20 @@ var action;
 
 			var detail = 1;
 			var options, event;
+			var mousedownOptions = Object.create(aOptions, {
+					type   : {
+						writable     : true,
+						configurable : true,
+						enumerable   : true,
+						value        : 'mousedown'
+					},
+					detail : {
+						writable     : true,
+						configurable : true,
+						enumerable   : true,
+						value        : 'detail'
+					},
+				});
 			switch (aOptions.type)
 			{
 				case 'mousemove':
@@ -1022,22 +1036,14 @@ var action;
 				case 'mouseup':
 					break;
 				case 'dblclick':
-					options = {
-						type      : 'mousedown',
-						detail    : detail,
-						__proto__ : aOptions
-					};
+					options = mousedownOptions;
 					this.fireMouseEventOnElement(aElement, options);
 					options.type = 'mouseup';
 					this.fireMouseEventOnElement(aElement, options);
 					detail++;
 				case 'click':
 				default:
-					options = {
-						type      : 'mousedown',
-						detail    : detail,
-						__proto__ : aOptions
-					};
+					options = mousedownOptions;
 					this.fireMouseEventOnElement(aElement, options);
 					options.type = 'mouseup';
 					this.fireMouseEventOnElement(aElement, options);
