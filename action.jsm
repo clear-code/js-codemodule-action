@@ -81,7 +81,7 @@ var action;
 		/** @private */
 		getBoxObjectFor : function(aNode) 
 		{
-			return ('getBoxObjectFor' in aNode.ownerDocument) ?
+			return (aNode.ownerDocument && 'getBoxObjectFor' in aNode.ownerDocument) ?
 					aNode.ownerDocument.getBoxObjectFor(aNode) :
 					this._boxObject.getBoxObjectFor(aNode) ;
 		},
