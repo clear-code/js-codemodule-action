@@ -290,7 +290,7 @@ var action;
 				else if (aArg) {
 					if (this._isDOMWindow(aArg))
 						w = aArg;
-					else if (this._isDOMElement(aArg)
+					else if (this._isDOMElement(aArg))
 						element = aArg;
 					else if (modifierNames.some(function(aName) {
 							return aName in aArg;
