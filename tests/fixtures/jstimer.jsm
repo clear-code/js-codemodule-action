@@ -11,11 +11,9 @@
    var interval = namespace.setInterval(callback, 1000, 'OK');
    namespace.clearInterval(interval);
 
- license: The MIT License, Copyright (c) 2010 SHIMODA "Piro" Hiroshi
-   http://www.cozmixng.org/repos/piro/fx3-compatibility-lib/trunk/license.txt
+ license: The MIT License, Copyright (c) 2010-2016 YUKI "Piro" Hiroshi
  original:
-   http://www.cozmixng.org/repos/piro/fx3-compatibility-lib/trunk/jstimer.jsm
-   http://www.cozmixng.org/repos/piro/fx3-compatibility-lib/trunk/jstimer.test.js
+   http://github.com/piroor/fxaddonlib-jstimer
 */
 
 var Cc = Components.classes;
@@ -25,24 +23,29 @@ var EXPORTED_SYMBOLS = [
 		'setTimeout',
 		'clearTimeout',
 		'setInterval',
-		'clearInterval'
+		'clearInterval',
+		'clearAllTimers'
 	];
 
-function setTimeout()
+function setTimeout(aCallback, aTimeout, ...aArgs)
 {
-	var args = Array.slice(arguments);
-	var callback = args.shift();
-	var timeout = args.shift();
-	if (typeof callback != 'string') {
-		let source = callback;
-		callback = function() { source.apply(getGlobal(), args); };
-		callback.source = source;
+	if (typeof aCallback != 'function' && !('call' in aCallback))
+		throw new Error('String type callback is obsolete.');
+
+	var source = aCallback;
+	aCallback = function() { source.apply(getGlobal(), aArgs); };
+	aCallback.source = source;
+	var owner;
+	try {
+		owner = getOwnerWindowFromCaller(arguments.callee.caller);
+	}
+	catch(e) {
 	}
 	return (new Timer(
-		callback,
-		timeout,
+		aCallback,
+		aTimeout,
 		Ci.nsITimer.TYPE_ONE_SHOT,
-		getOwnerWindowFromCaller(arguments.callee.caller)
+		owner
 	)).id;
 }
 
@@ -51,21 +54,25 @@ function clearTimeout(aId)
 	Timer.cancel(aId);
 }
 
-function setInterval()
+function setInterval(aCallback, aInterval, ...aArgs)
 {
-	var args = Array.slice(arguments);
-	var callback = args.shift();
-	var interval = args.shift();
-	if (typeof callback != 'string') {
-		let source = callback;
-		callback = function() { source.apply(getGlobal(), args); };
-		callback.source = source;
+	if (typeof aCallback != 'function' && !('call' in aCallback))
+		throw new Error('String type callback is obsolete.');
+
+	var source = aCallback;
+	aCallback = function() { source.apply(getGlobal(), aArgs); };
+	aCallback.source = source;
+	var owner;
+	try {
+		owner = getOwnerWindowFromCaller(arguments.callee.caller);
+	}
+	catch(e) {
 	}
 	return (new Timer(
-		callback,
-		interval,
+		aCallback,
+		aInterval,
 		Ci.nsITimer.TYPE_REPEATING_SLACK,
-		getOwnerWindowFromCaller(arguments.callee.caller)
+		owner
 	)).id;
 }
 
@@ -73,6 +80,15 @@ function clearInterval(aId)
 {
 	Timer.cancel(aId);
 }
+
+
+function clearAllTimers()
+{
+	Timer.cancelAll();
+}
+
+/** Alias, as a handler for bootstrap.js */
+var shutdown = clearAllTimers;
 
 
 function Timer(aCallback, aTime, aType, aOwner) {
@@ -119,10 +135,7 @@ Timer.prototype = {
 			return;
 		}
 
-		if (typeof this.callback == 'function')
-			this.callback();
-		else
-			evalInSandbox(this.callback);
+		this.callback();
 
 		if (this.type == Ci.nsITimer.TYPE_ONE_SHOT)
 			this.cancel();
@@ -134,15 +147,18 @@ Timer.cancel = function(aId) {
 	if (timer)
 		timer.cancel();
 };
+Timer.cancelAll = function(aId) {
+	for (var i in this.instances)
+	{
+		let timer = this.instances[i];
+		if (timer)
+			timer.cancel();
+	}
+	this.instances = {};
+};
 Timer.getInstanceById = function(aId) {
 	return this.instances[aId] || null ;
 };
-
-function evalInSandbox(aCode, aSandboxOwner)
-{
-	var sandbox = new Components.utils.Sandbox(aSandboxOwner || 'about:blank');
-	return Components.utils.evalInSandbox(aCode, sandbox);
-}
 
 function getGlobal()
 {
@@ -153,7 +169,9 @@ function getOwnerWindowFromCaller(aCaller)
 {
 	try {
 		var global = aCaller.valueOf.call(null);
-		if (global && global instanceof Ci.nsIDOMWindow)
+		if (global &&
+			typeof global.Window == 'function' &&
+			global instanceof global.Window)
 			return global;
 	}
 	catch(e) {
