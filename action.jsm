@@ -1,7 +1,7 @@
 /**
  * @fileOverview User Action Emulator for Firefox 31 or later 
  * @author       ClearCode Inc.
- * @version      10
+ * @version      11
  *
  * @example
  *   Components.utils.import('resource://my-modules/action.jsm');
@@ -45,7 +45,7 @@ Components.utils.import('resource://gre/modules/Promise.jsm');
  
 var action; 
 (function() {
-	const currentRevision = 10;
+	const currentRevision = 11;
 
 	var loadedRevision = 'action' in namespace ?
 			namespace.action.revision :
