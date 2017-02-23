@@ -2238,13 +2238,12 @@ var action;
 		 * @param {string=} aInput (optional)
 		 *   A string to be input.
 		 *
-		 * @throws {Error}
-		 *   If no element is given, or the element is not editable.
+		 * @returns Promise
 		 */
 		inputTo : function() 
 		{
 			var options = this._getInputOptionsFromArguments.apply(this, arguments);
-			this.inputTextToField(options.element, options.input, false, false);
+			return this.inputTextToField(options.element, options.input, false, false);
 		},
  
 		/**
@@ -2256,13 +2255,12 @@ var action;
 		 * @param {string=} aInput (optional)
 		 *   A string to be input.
 		 *
-		 * @throws {Error}
-		 *   If no element is given, or the element is not editable.
+		 * @returns Promise
 		 */
 		appendTo : function() 
 		{
 			var options = this._getInputOptionsFromArguments.apply(this, arguments);
-			this.inputTextToField(options.element, options.input, true, false);
+			return this.inputTextToField(options.element, options.input, true, false);
 		},
  
 		/**
@@ -2275,13 +2273,12 @@ var action;
 		 * @param {string=} aInput (optional)
 		 *   A string to be pasted.
 		 *
-		 * @throws {Error}
-		 *   If no element is given, or the element is not editable.
+		 * @returns Promise
 		 */
 		pasteTo : function() 
 		{
 			var options = this._getInputOptionsFromArguments.apply(this, arguments);
-			this.inputTextToField(options.element, options.input, false, true);
+			return this.inputTextToField(options.element, options.input, false, true);
 		},
  
 		/**
@@ -2294,13 +2291,12 @@ var action;
 		 * @param {string=} aInput (optional)
 		 *   A string to be pasted.
 		 *
-		 * @throws {Error}
-		 *   If no element is given, or the element is not editable.
+		 * @returns Promise
 		 */
 		additionallyPasteTo : function() 
 		{
 			var options = this._getInputOptionsFromArguments.apply(this, arguments);
-			this.inputTextToField(options.element, options.input, true, true);
+			return this.inputTextToField(options.element, options.input, true, true);
 		},
  
 // low level API 
@@ -2347,56 +2343,64 @@ var action;
 		inputTextToField : function(aElement, aInput, aIsAppend, aDontFireKeyEvents) 
 		{
 			if (!aElement) {
-				throw new Error('action.inputTextToField::no target!');
+				return Promise.reject(new Error('action.inputTextToField::no target!'));
 			}
 			else if (this._isDOMElement(aElement)) {
 				if (aElement.localName != 'textbox' &&
 					!(aElement instanceof Ci.nsIDOMNSEditableElement))
-					throw new Error('action.inputTextToField::['+aElement+'] is not an input field!');
+					return Promise.reject(new Error('action.inputTextToField::['+aElement+'] is not an input field!'));
 			}
 			else {
-				throw new Error('action.inputTextToField::['+aElement+'] is not an input field!');
+				return Promise.reject(new Error('action.inputTextToField::['+aElement+'] is not an input field!'));
 			}
 
-			var inputOffset = aElement.value.length;
 			if (!aIsAppend) {
 				aElement.value = '';
-				inputOffset = 0;
 			}
 
+			var promise = new Promise((function(aResolve, aReject) {
 			if (!aDontFireKeyEvents && aInput) {
 				var input = aElement;
 				if (input.localName == 'textbox') input = input.inputField;
 
-				var array = String(aInput || '').match(this._inputArrayPattern);
-				if (!array) array = String(aInput || '').split('');
-				array.forEach(function(aChar, aIndex) {
-					if (this._directInputPattern.test(aChar)) {
-						do {
+				var characters = String(aInput || '').match(this._inputArrayPattern);
+				if (!characters) characters = String(aInput || '').split('');
+
+				var timer = input.ownerDocument.defaultView.setInterval((function() {
+					if (characters.length === 0)
+						return aResolve();
+
+					var char = characters.shift();
+					var beforeCount = input.value.length;
+					if (this._directInputPattern.test(char)) {
 						this.fireKeyEventOnElement(input, {
 							type     : 'keypress',
-							charCode : aChar.charCodeAt(0)
+							charCode : char.charCodeAt(0)
 						});
-						}
-						while (input.value.length < inputOffset + aIndex + 1);
 					}
 					else {
 						this.fireKeyEventOnElement(input, {
 							type    : 'keypress',
 							keyCode : 0xE5
 						});
-						this.inputTextToField(input, aChar, true, true);
+						this.inputTextToField(input, char, true, true);
 					}
-				}, this);
+					if (input.length == beforeCount)
+						characters.unshift(char); // retry!
+				}).bind(this), 1);
 			}
 			else {
 				aElement.value += (aInput || '');
+				aResolve();
 			}
+			}).bind(this));
 
+			return promise.then((function() {
 			var doc = this._getDocumentFromEventTarget(aElement);
 			var event = doc.createEvent('UIEvents');
 			event.initUIEvent('input', true, true, doc.defaultView, 0);
 			aElement.dispatchEvent(event);
+			}).bind(this));
 		},
    
 /* Operations for coordinates */ 
