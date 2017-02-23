@@ -2359,49 +2359,49 @@ var action;
 			}
 
 			var promise = new Promise((function(aResolve, aReject) {
-			if (!aDontFireKeyEvents && aInput) {
-				var input = aElement;
-				if (input.localName == 'textbox') input = input.inputField;
+				if (!aDontFireKeyEvents && aInput) {
+					var input = aElement;
+					if (input.localName == 'textbox') input = input.inputField;
 
-				var characters = String(aInput || '').match(this._inputArrayPattern);
-				if (!characters) characters = String(aInput || '').split('');
+					var characters = String(aInput || '').match(this._inputArrayPattern);
+					if (!characters) characters = String(aInput || '').split('');
 
-				var timer = input.ownerDocument.defaultView.setInterval((function() {
-					if (characters.length === 0) {
-						input.ownerDocument.defaultView.clearInterval(timer);
-						return aResolve();
-					}
+					var timer = input.ownerDocument.defaultView.setInterval((function() {
+						if (characters.length === 0) {
+							input.ownerDocument.defaultView.clearInterval(timer);
+							return aResolve();
+						}
 
-					var char = characters.shift();
-					var beforeCount = input.value.length;
-					if (this._directInputPattern.test(char)) {
-						this.fireKeyEventOnElement(input, {
-							type     : 'keypress',
-							charCode : char.charCodeAt(0)
-						});
-					}
-					else {
-						this.fireKeyEventOnElement(input, {
-							type    : 'keypress',
-							keyCode : 0xE5
-						});
-						this.inputTextToField(input, char, true, true);
-					}
-					if (input.length == beforeCount)
-						characters.unshift(char); // retry!
-				}).bind(this), 1);
-			}
-			else {
-				aElement.value += (aInput || '');
-				aResolve();
-			}
+						var char = characters.shift();
+						var beforeCount = input.value.length;
+						if (this._directInputPattern.test(char)) {
+							this.fireKeyEventOnElement(input, {
+								type     : 'keypress',
+								charCode : char.charCodeAt(0)
+							});
+						}
+						else {
+							this.fireKeyEventOnElement(input, {
+								type    : 'keypress',
+								keyCode : 0xE5
+							});
+							this.inputTextToField(input, char, true, true);
+						}
+						if (input.length == beforeCount)
+							characters.unshift(char); // retry!
+					}).bind(this), 1);
+				}
+				else {
+					aElement.value += (aInput || '');
+					aResolve();
+				}
 			}).bind(this));
 
 			return promise.then((function() {
-			var doc = this._getDocumentFromEventTarget(aElement);
-			var event = doc.createEvent('UIEvents');
-			event.initUIEvent('input', true, true, doc.defaultView, 0);
-			aElement.dispatchEvent(event);
+				var doc = this._getDocumentFromEventTarget(aElement);
+				var event = doc.createEvent('UIEvents');
+				event.initUIEvent('input', true, true, doc.defaultView, 0);
+				aElement.dispatchEvent(event);
 			}).bind(this));
 		},
    
