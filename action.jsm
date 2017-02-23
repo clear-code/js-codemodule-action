@@ -2358,7 +2358,11 @@ var action;
 				throw new Error('action.inputTextToField::['+aElement+'] is not an input field!');
 			}
 
-			if (!aIsAppend) aElement.value = '';
+			var inputOffset = aElement.value.length;
+			if (!aIsAppend) {
+				aElement.value = '';
+				inputOffset = 0;
+			}
 
 			if (!aDontFireKeyEvents && aInput) {
 				var input = aElement;
@@ -2366,12 +2370,15 @@ var action;
 
 				var array = String(aInput || '').match(this._inputArrayPattern);
 				if (!array) array = String(aInput || '').split('');
-				array.forEach(function(aChar) {
+				array.forEach(function(aChar, aIndex) {
 					if (this._directInputPattern.test(aChar)) {
+						do {
 						this.fireKeyEventOnElement(input, {
 							type     : 'keypress',
 							charCode : aChar.charCodeAt(0)
 						});
+						}
+						while (input.value.length < inputOffset + aIndex + 1);
 					}
 					else {
 						this.fireKeyEventOnElement(input, {
