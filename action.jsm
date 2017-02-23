@@ -2367,8 +2367,10 @@ var action;
 				if (!characters) characters = String(aInput || '').split('');
 
 				var timer = input.ownerDocument.defaultView.setInterval((function() {
-					if (characters.length === 0)
+					if (characters.length === 0) {
+						input.ownerDocument.defaultView.clearInterval(timer);
 						return aResolve();
+					}
 
 					var char = characters.shift();
 					var beforeCount = input.value.length;
