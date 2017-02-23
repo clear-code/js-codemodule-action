@@ -1,7 +1,7 @@
 /**
  * @fileOverview User Action Emulator for Firefox 31 or later 
  * @author       ClearCode Inc.
- * @version      8
+ * @version      10
  *
  * @example
  *   Components.utils.import('resource://my-modules/action.jsm');
@@ -10,7 +10,7 @@
  *   // (ja: http://www.clear-code.com/software/uxu/helpers.html#actions )
  *
  * @license
- *   The MIT License, Copyright (c) 2010-2014 ClearCode Inc.
+ *   The MIT License, Copyright (c) 2010-2017 ClearCode Inc.
  *   https://github.com/clear-code/js-codemodules/blob/master/license.txt
  * @url https://github.com/clear-code/js-codemodules/blob/master/action.jsm
  * @url https://github.com/clear-code/js-codemodules/blob/master/action_tests/
@@ -45,7 +45,7 @@ Components.utils.import('resource://gre/modules/Promise.jsm');
  
 var action; 
 (function() {
-	const currentRevision = 8;
+	const currentRevision = 10;
 
 	var loadedRevision = 'action' in namespace ?
 			namespace.action.revision :
